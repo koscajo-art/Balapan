@@ -1,0 +1,19 @@
+<section class="wrap interior event-page">
+<div class="actions event-back"><a href="/#news">Жаңалықтар</a>{% if user %}<a href="/kabinet">Жеке кабинет</a>{% endif %}</div>
+<article class="card">
+<p class="eyebrow">ХАБАРЛАНДЫРУ · <time datetime="{{ item.created }}">{{ item.created[8:10] }}.{{ item.created[5:7] }}.{{ item.created[:4] }}</time></p>
+<h1>{{ item.title }}</h1>
+{% if item.event_day or item.location %}<div class="choice-bar">
+{% if item.event_day %}<span class="pill">Іс-шара күні · <time datetime="{{ item.event_day }}">{{ item.event_day[8:10] }}.{{ item.event_day[5:7] }}.{{ item.event_day[:4] }}</time></span>{% endif %}
+{% if item.location %}<span class="pill">{{ item.location }}</span>{% endif %}
+</div>{% endif %}
+<p class="event-intro">{{ item.body }}</p>
+{% if item.details %}<p class="event-text">{{ item.details }}</p>{% endif %}
+{% if item.photo %}<img class="event-media" src="/janalyq/{{ item.id }}/photo" alt="{{ item.title }} · іс-шара фотосы">{% endif %}
+{% if item.video %}<video class="event-media" controls playsinline preload="metadata" src="/janalyq/{{ item.id }}/video"></video>{% endif %}
+</article>
+{% if user and user.role == 'admin' %}
+{% if msg == 'saved' %}<p class="notice" role="status">Хабарландыру сақталды.</p>{% elif msg == 'event_invalid' %}<p class="notice bad" role="alert">Өрістерді, файл пішімін және көлемін тексеріңіз.</p>{% endif %}
+<details class="card lesson-day" {% if msg == 'event_invalid' %}open{% endif %}><summary>Хабарландыруды өңдеу</summary>{% include 'event_form.html' %}</details>
+{% endif %}
+</section>

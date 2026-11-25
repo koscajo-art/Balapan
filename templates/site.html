@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#192a44">
+{% set titles = {'home':'Балабақша', 'dashboard':'Жеке кабинет', 'login':'Кіру', 'register':'Тіркелу', 'apply':'Өтінім беру', 'schedule':'Күн тәртібі', 'diary':'Баланың күнделігі', 'lessons':'Сабақ кестесі', 'groups':'Топтар', 'teachers':'Тәрбиешілер'} %}
+<title>{{ item.title if page == "event" else titles[page] }} · Балапан</title>
+<link rel="stylesheet" href="/static/site.css?v=4">
+</head>
+<body class="page-{{ page }}">
+<a class="skip" href="#main">Негізгі мазмұнға өту</a>
+<header><nav class="wrap nav" aria-label="Негізгі мәзір">
+<a class="brand" href="/"><span class="mark" aria-hidden="true">Б</span> Балапан</a>
+<div class="nav-links"><a href="/toptar" {% if page=="groups" %}aria-current="page"{% endif %}>Топтар</a><a href="/keste" {% if page=='schedule' %}aria-current="page"{% endif %}>Күн тәртібі</a><a href="/tarbieshiler" {% if page=="teachers" %}aria-current="page"{% endif %}>Тәрбиешілер</a></div>
+<a class="button outline" href="{{ '/kabinet' if user else '/kiru' }}">{{ 'Жеке кабинет' if user else 'Кіру' }}</a>
+</nav></header>
+<main id="main">
+{% if page == 'home' %}
+<section class="wrap hero">
+<div class="hero-copy"><p class="eyebrow">МЕКТЕПКЕ ДЕЙІНГІ ТӘРБИЕ</p><h1>«Балапан» балабақшасы</h1>
+<p>Топтармен танысыңыз, күн тәртібін қараңыз және балаңызды онлайн тіркеуге өтінім жіберіңіз.</p>
+<div class="actions"><a class="button" href="{{ '/kabinet' if user and user.role != 'parent' else '/otinim' }}">{{ 'Жеке кабинет' if user and user.role != 'parent' else 'Өтінім беру' }}</a><a class="button outline" href="/toptar">Топтарды қарау</a></div>
+</div>
+<div class="hero-photo"><img src="/static/playroom.jpg" alt="Балабақшада текшелермен ойнап отырған балалар" width="1200" height="800" fetchpriority="high"><div class="photo-label"><div><strong>Дүйсенбі – жұма</strong><small>07:30–18:30</small></div></div></div>
+</section>
+<nav class="wrap shortcuts" aria-label="Балабақша туралы">
+<a href="/toptar"><strong>Балабақша топтары</strong><span>Жас санаты және бос орындар</span></a>
+<a href="/keste"><strong>Күн тәртібі</strong><span>Сабақтар, серуен және ас мәзірі</span></a>
+<a href="/tarbieshiler"><strong>Тәрбиешілер</strong><span>Топтарға бекітілген мамандар</span></a>
+</nav>
+<section class="wrap section" id="news"><h2>Жаңалықтар</h2>
+<div class="cards">{% for item in news %}<a class="card linked-card" href="/janalyq/{{ item.id }}"><time datetime="{{ item.created }}">{{ item.created[8:10] }}.{{ item.created[5:7] }}.{{ item.created[:4] }}</time><h3>{{ item.title }}</h3><p>{{ item.body }}</p></a>{% else %}<p>Жаңалықтар әлі жарияланған жоқ.</p>{% endfor %}</div></section>
+<section class="wrap section faq"><div><p class="eyebrow">ҚАБЫЛДАУ</p><h2>Жиі қойылатын сұрақтар</h2></div>
+<div><details><summary>Өтінімді қалай жіберемін?</summary><p>Ата-ана ретінде тіркеліп, топ таңдаңыз және баланың мәліметтерін енгізіңіз.</p></details>
+<details><summary>Өтінімнің күйін қайдан көремін?</summary><p>Жеке кабинеттегі өтінімдер кестесінен көре аласыз.</p></details>
+<details><summary>Күн тәртібі мен ас мәзірі қайда?</summary><p>Екеуі де <a href="/keste">«Күн тәртібі»</a> бетінде көрсетілген.</p></details></div></section>
+{% elif page == 'groups' %}
+<section class="wrap interior" id="groups"><a class="back" href="/">Басты бет</a>
+<div class="section-heading"><div><h1>Балабақша топтары</h1></div><p>Бос орындар қабылданған өтінімдерге қарай жаңарады.</p></div>
+<div class="cards">
+{% for g in groups %}<article class="card group-card"><div class="group-top"><span class="group-icon tone-{{ loop.index0 % 3 }}" aria-hidden="true">{{ ['✿','✦','☀'][loop.index0 % 3] }}</span><span class="pill">{{ g.ages }}</span></div>
+<h3>{{ g.name }}</h3><p>{{ g.description }}</p><small>Тәрбиеші · {{ g.teacher }}</small>
+<div class="group-bottom"><strong>{{ g.capacity - g.enrolled }} бос орын</strong>
+{% if g.enrolled < g.capacity and (not user or user.role == 'parent') %}<a href="/otinim?group={{ g.id }}">Өтінім беру</a>{% endif %}</div></article>{% endfor %}
+</div></section>
+{% elif page == 'teachers' %}
+<section class="wrap interior"><a class="back" href="/">Басты бет</a><h1>Тәрбиешілер</h1>
+<div class="cards directory">
+{% for member in roster %}<article class="card"><h2>{{ member.name }}</h2><p>Бекітілген топтар</p><ul class="tag-list">{% for name in member.groups %}<li class="pill">{{ name }}</li>{% endfor %}</ul></article>
+{% else %}<p class="empty">Әзірге топтарға тәрбиеші бекітілмеген.</p>{% endfor %}
+</div></section>
+{% elif page == 'event' %}
+{% include 'event.html' %}
+{% elif page == 'schedule' %}
+<section class="wrap interior"><a class="back" href="/">Басты бет</a><h1>Күн тәртібі</h1><p>Дүйсенбі – жұма · 07:30–18:30</p>
+{% if assigned %}
+<nav class="choice-bar" aria-label="Топты таңдау">
+{% for g in assigned %}<a class="button {{ 'outline' if g.id != selected_group.id }}" href="/keste?group={{ g.id }}" {% if g.id == selected_group.id %}aria-current="true"{% endif %}>{{ g.name }} · {{ g.ages }}</a>{% endfor %}
+</nav>
+{% else %}
+<p class="schedule-intro">Жас санаты бойынша күн тәртібінің үлгісін таңдаңыз.</p>
+<nav class="choice-bar" aria-label="Жас санатын таңдау">
+{% for label in profiles %}<a class="button {{ 'outline' if loop.index0 != age }}" href="/keste?age={{ loop.index0 }}" {% if loop.index0 == age %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+</nav>
+{% endif %}
+<div class="split">
+<article class="card"><h2>{{ selected_group.name if selected_group else age_label }} · Күн жоспары</h2><ul class="timeline">{% for hour, title in schedule %}<li><time>{{ hour }}</time><strong>{{ title }}</strong></li>{% endfor %}</ul></article>
+<article class="card"><h2>Ас мәзірінің үлгісі</h2><ul class="timeline">{% for hour, title, meal in menu %}<li><time>{{ hour }}</time><div><strong>{{ title }}</strong><p>{{ meal }}</p></div></li>{% endfor %}</ul></article></div></section>
+{% elif page in ('login', 'register', 'apply') %}
+<section class="wrap interior narrow">
+<a class="back" href="{{ '/kabinet' if page=='apply' else '/' }}">{{ 'Жеке кабинет' if page=='apply' else 'Басты бет' }}</a>
+<div class="card form-card"><h1>{{ titles[page] }}</h1>
+{% if error %}<p class="notice bad" role="alert">{{ error }}</p>{% endif %}
+<form method="post" class="stack">
+{% if page == 'apply' %}
+<label>Топ<select name="group" required><option value="">Топты таңдаңыз</option>{% for g in groups %}<option value="{{ g.id }}" {% if g.id|string==selected %}selected{% endif %} {% if g.enrolled >= g.capacity %}disabled{% endif %}>{{ g.name }} · {{ g.ages }} · {{ g.capacity-g.enrolled }} бос орын</option>{% endfor %}</select></label>
+<label>Баланың аты-жөні<input name="child" maxlength="100" value="{{ values.child|default('') }}" required></label>
+<label>Туған күні<input name="birth" type="date" max="{{ today }}" value="{{ values.birth|default('') }}" required></label>
+<label>Байланыс телефоны<input name="phone" type="tel" placeholder="+7 700 000 00 00" maxlength="30" value="{{ values.phone|default('') }}" required></label>
+<label>Қосымша ақпарат <small>(міндетті емес)</small><textarea name="note" maxlength="500" rows="3">{{ values.note|default('') }}</textarea></label>
+<button class="button">Өтінімді жіберу</button>
+{% else %}
+{% if page == 'register' %}<label>Аты-жөні<input name="name" maxlength="100" autocomplete="name" required></label>{% endif %}
+<label>Email<input name="email" type="email" maxlength="254" autocomplete="username" required></label>
+<label>Құпиясөз<input name="password" type="password" minlength="8" maxlength="128" autocomplete="{{ 'new-password' if page=='register' else 'current-password' }}" required></label>
+<button class="button">{{ titles[page] }}</button>
+{% endif %}
+</form>
+{% if page == 'login' %}<p>Аккаунтыңыз жоқ па? <a href="/tirkelu">Тіркелу</a></p>
+<details><summary>Демо аккаунттар</summary><div class="demo">
+{% for key, label in roles.items() %}<form method="post"><input type="hidden" name="email" value="{{ key }}@balapan.test"><input type="hidden" name="password" value="Balapan2026!"><button class="button outline">{{ label }}</button></form>{% endfor %}
+</div></details>
+{% elif page == 'register' %}<p>Аккаунтыңыз бар ма? <a href="/kiru">Кіру</a></p>{% endif %}
+</div></section>
+{% elif page == 'dashboard' %}
+{% set messages = {'saved':'Өзгеріс сақталды.', 'submitted':'Өтінім жіберілді. Күйін осы беттен көре аласыз.', 'full':'Топта бос орын жоқ.', 'decided':'Бұл өтінім бойынша шешім қабылданған.', 'invalid':'Өрістерді тексеріңіз.', 'capacity':'Сыйымдылық қабылданған бала санынан аз болмауы керек.', 'schedule_conflict':'Бұл тәрбиешінің сабақ кестесінде уақыт қайшылығы бар.', 'duplicate':'Осындай атауы бар топ бұрыннан бар.'} %}
+<section class="wrap interior workspace">
+<aside class="workspace-aside">
+<p class="eyebrow">{{ roles[user.role] }}</p><strong>{{ user.name }}</strong>
+<nav aria-label="Кабинет бөлімдері">
+{% if user.role == 'parent' %}
+<a href="#children-title">Менің балаларым</a><a href="#applications-panel">Өтінімдер</a><a href="/keste">Күн тәртібі</a>
+{% elif user.role == 'teacher' %}
+<a href="#daily-lessons">Күннің сабақтары</a><a href="#applications-panel">Қатысу журналы</a><a href="/sabak-kestesi">Апталық кесте</a>
+{% else %}
+<a href="#applications-panel">Қабылдау өтінімдері</a><a href="#attendance-report">Қатысу есебі</a><a href="#group-management">Топтарды басқару</a><a href="/sabak-kestesi">Сабақ кестесі</a><a href="/api/docs">REST API</a>
+{% endif %}
+<a href="#announcements">Хабарландырулар</a>
+</nav>
+<form method="post" action="/shygu"><button class="button outline">Шығу</button></form>
+</aside>
+<div class="workspace-content"><div class="section-heading dashboard-heading"><h1>Жеке кабинет</h1>
+{% if user.role == 'parent' %}<a class="button" href="/otinim">Жаңа өтінім</a>{% endif %}
+</div>
+{% if msg in messages %}<p role="status" class="notice {{ 'bad' if msg not in ('saved','submitted') }}">{{ messages[msg] }}</p>{% endif %}
+{% if user.role == 'admin' %}<div class="cards stats">{% for g in groups %}<article class="card"><h3>{{ g.name }}</h3><p>{{ g.enrolled }} / {{ g.capacity }} бала</p><progress aria-label="{{ g.name }} тобының толуы" value="{{ g.enrolled }}" max="{{ g.capacity }}"></progress></article>{% endfor %}</div>{% endif %}
+{% if user.role == 'parent' %}
+<section class="child-section" aria-labelledby="children-title">
+<h2 id="children-title">Менің балаларым</h2>
+<div class="date-tools">
+<nav class="choice-bar" aria-label="Қатысу күнін таңдау">
+{% for label in ['Бүгін', 'Кеше', 'Алдыңғы күн'] %}<a class="button {{ 'outline' if quick_days[loop.index0] != day }}" href="{{ '/kabinet' if loop.first else '/kabinet?day=' ~ quick_days[loop.index0] }}" {% if quick_days[loop.index0] == day %}aria-current="date"{% endif %}>{{ label }}</a>{% endfor %}
+</nav>
+<details class="date-more" {% if day not in quick_days %}open{% endif %}><summary>Басқа күн{% if day not in quick_days %} · {{ day[8:10] }}.{{ day[5:7] }}.{{ day[:4] }}{% endif %}</summary>
+<form class="filters" method="get"><label>Қатысу күні<input type="date" name="day" value="{{ day }}" required></label><button class="button outline">Көрсету</button></form></details>
+</div>
+<div class="cards">
+{% for child in rows if child.state == 'accepted' %}
+<article class="card child-card">
+<p class="eyebrow">{{ child.group_name }}</p><h3>{{ child.child }}</h3>
+<p>Қатысуы · <strong>{{ attendance_labels.get(child.attendance, 'Белгіленбеген') }}</strong></p>
+{% if child.absence_reason %}<p class="absence-note">Келмейтіні туралы хабарлама · {{ child.absence_reason }}</p>{% endif %}
+{% if child.latest_diary %}<p>Соңғы жазба · <a href="/kundelik/{{ child.id }}?day={{ child.latest_diary }}">{{ child.latest_diary }}</a></p>{% else %}<p>Күнделікке жазба әлі қосылмаған.</p>{% endif %}
+<div class="actions"><a class="button outline" href="/kundelik/{{ child.id }}?day={{ day }}">Күнделік</a><a href="/keste?group={{ child.group_id }}">Күн тәртібі</a></div>
+</article>
+{% else %}<p class="empty">Қабылданған бала осы жерде көрсетіледі.</p>{% endfor %}
+</div></section>
+{% set rows = rows | rejectattr('state','equalto','accepted') | list %}
+{% elif user.role == 'teacher' %}
+<section class="card child-section" id="daily-lessons"><div class="section-heading"><div><p class="eyebrow">{{ weekday }} · {{ day }}</p><h2>Күннің сабақтары</h2></div><a href="/sabak-kestesi">Апталық кесте</a></div>
+<ul class="timeline">
+{% for lesson in lessons %}<li><time>{{ lesson.starts }}–{{ lesson.ends }}</time><div><strong>{{ lesson.group_name }} · {{ lesson.title }}</strong><p>{{ lesson.task }}</p></div></li>
+{% else %}<li>Бұл күнге сабақ жоспарланбаған.</li>{% endfor %}
+</ul></section>
+{% endif %}
+<article class="card" id="applications-panel">
+<h2>{{ 'Қатысу журналы' if user.role=='teacher' else 'Қабылдау өтінімдері' }}</h2>
+<form class="filters" method="get">
+<label>Баланы іздеу<input name="q" value="{{ q }}" placeholder="Баланың аты-жөні"></label>
+{% if user.role=='admin' %}<label>Күйі<select name="status"><option value="">Барлығы</option>{% for key,name in states.items() %}<option value="{{ key }}" {% if key==selected_status %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+{% elif user.role=='teacher' %}<label>Журнал және сабақ күні<input type="date" name="day" value="{{ day }}"></label>{% else %}<input type="hidden" name="day" value="{{ day }}">{% endif %}
+<button class="button outline">Көрсету</button>{% if q or selected_status or day != today %}<a href="/kabinet">Тазалау</a>{% endif %}
+</form>
+{% if rows %}<div class="table-scroll" tabindex="0" aria-label="Балалар кестесі"><table>
+<thead><tr><th>Бала</th><th>Топ</th>{% if user.role=='admin' %}<th>Ата-ана</th>{% endif %}{% if user.role!='teacher' %}<th>Өтінім күйі</th>{% endif %}<th>{{ 'Шешім' if user.role=='admin' else 'Қатысу' }}</th></tr></thead>
+<tbody>{% for row in rows %}<tr><td><strong>{{ row.child }}</strong><small>{{ row.birth }}</small>
+{% if user.role in ('parent','teacher') and row.state=='accepted' %}<a href="/kundelik/{{ row.id }}?day={{ day }}">Күнделік</a>{% endif %}
+{% if user.role in ('parent','teacher') and row.absence_reason %}<small class="absence-note">Келмейтіні туралы хабарлама · {{ row.absence_reason }}</small>{% endif %}</td><td>{{ row.group_name }}</td>
+{% if user.role=='admin' %}<td>{{ row.parent_name }}<small>{{ row.phone }}</small>{% if row.note %}<small>{{ row.note }}</small>{% endif %}</td>{% endif %}
+{% if user.role!='teacher' %}<td><span class="pill {{ row.state }}">{{ states[row.state] }}</span></td>{% endif %}
+<td>{% if user.role=='admin' and row.state=='pending' %}
+<form method="post" class="inline" action="/otinim/{{ row.id }}/sheshim"><button class="button compact" name="state" value="accepted">Қабылдау</button><button class="button outline compact" name="state" value="rejected">Бас тарту</button></form>
+{% elif user.role=='teacher' and day <= today %}
+<form method="post" class="inline" action="/katysu/{{ row.id }}"><input type="hidden" name="day" value="{{ day }}"><select name="state" aria-label="{{ row.child }} қатысу күйі" required><option value="">Белгілеу</option>{% for key,label in attendance_labels.items() %}<option value="{{ key }}" {% if row.attendance==key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="button compact">Сақтау</button></form>
+{% elif user.role=='parent' %}{{ attendance_labels.get(row.attendance, '—') }}{% else %}—{% endif %}</td>
+</tr>{% endfor %}</tbody></table></div>{% else %}<p class="empty">Көрсетілетін жазба жоқ.</p>{% endif %}
+</article>
+{% if user.role=='admin' %}
+<section class="card report" id="attendance-report"><h2>Топтардың қатысу есебі</h2>
+<form class="filters" method="get"><label>Есеп күні<input type="date" name="day" value="{{ day }}" max="{{ today }}" required></label><button class="button outline">Есепті көрсету</button></form>
+<div class="table-scroll" tabindex="0" aria-label="Қатысу есебі"><table>
+<thead><tr><th>Топ</th><th>Тізімде</th><th>Келді</th><th>Келмеді</th><th>Себепті</th><th>Белгіленбеген</th></tr></thead>
+<tbody>{% for g in report %}<tr><th scope="row">{{ g.name }}</th><td>{{ g.total }}</td><td>{{ g.present }}</td><td>{{ g.absent }}</td><td>{{ g.excused }}</td><td>{{ g.unmarked }}</td></tr>{% endfor %}</tbody></table></div>
+</section>
+<div class="split">
+<article class="card" id="group-management"><h2>Топтарды басқару</h2>
+{% for g in [none] + groups %}<details><summary>{{ g.name if g else 'Жаңа топ қосу' }}</summary>
+<form method="post" action="/toptar" class="stack"><input type="hidden" name="group_id" value="{{ g.id if g else 0 }}">
+<label>Топ атауы<input name="name" value="{{ g.name if g else '' }}" maxlength="60" required></label>
+<label>Жас санаты<input name="ages" value="{{ g.ages if g else '' }}" placeholder="3–4 жас" maxlength="30" required></label>
+<label>Сыйымдылық<input name="capacity" type="number" min="1" max="100" value="{{ g.capacity if g else '' }}" required></label>
+<label>Тәрбиеші<select name="teacher" required>{% for t in teachers %}<option value="{{ t.id }}" {% if g and g.teacher_id==t.id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></label>
+<label>Сипаттама<textarea name="description" rows="2" maxlength="250" required>{{ g.description if g else '' }}</textarea></label><button class="button">Сақтау</button></form>
+</details>{% endfor %}</article>
+<article class="card"><h2>Іс-шара жариялау</h2>
+{% if msg == 'event_invalid' %}<p class="notice bad" role="alert">Өрістерді, файл пішімін және көлемін тексеріңіз.</p>{% endif %}
+{% set item = none %}{% include 'event_form.html' %}
+</article>
+</div>
+{% endif %}
+<section class="section" id="announcements"><h2>Соңғы хабарландырулар</h2><div class="cards announcement-grid">
+{% for item in news[:3] %}<a class="card linked-card" href="/janalyq/{{ item.id }}"><h3>{{ item.title }}</h3><p>{{ item.body }}</p></a>
+{% else %}<p class="empty">Хабарландырулар әлі жоқ.</p>{% endfor %}
+</div></section>
+</div></section>
+{% elif page == 'lessons' %}
+{% include 'lessons.html' %}
+{% elif page == 'diary' %}
+<section class="wrap interior">
+<a class="back" href="/kabinet?day={{ day }}">Жеке кабинет</a>
+<h1>Баланың күнделігі</h1><p>{{ child.child }} · {{ child.group_name }}</p>
+<form class="filters" method="get"><label>Күнді таңдаңыз<input type="date" name="day" value="{{ day }}" required></label><button class="button outline">Көрсету</button></form>
+{% if msg == 'saved' %}<p class="notice" role="status">Өзгеріс сақталды.</p>{% elif msg == 'invalid' %}<p class="notice bad" role="alert">Күнді және міндетті өрістерді тексеріңіз.</p>{% endif %}
+<div class="split">
+<article class="card"><h2>Күннің қорытындысы</h2>
+{% set fields = [('meal','Тамақтануы'), ('rest','Тынығуы'), ('activity','Сабақтар мен ойындар'), ('note','Тәрбиешінің ескертпесі')] %}
+{% if user.role == 'teacher' and day <= today %}
+<form class="stack" method="post" action="/kundelik/{{ child.id }}"><input type="hidden" name="day" value="{{ day }}">
+{% for key,label in fields %}<label>{{ label }}<textarea name="{{ key }}" maxlength="500" rows="2" {% if key != 'note' %}required{% endif %}>{{ entry[key] if entry else '' }}</textarea></label>{% endfor %}
+<button class="button">Күнделікті сақтау</button></form>
+{% elif entry %}
+<dl class="diary-values">{% for key,label in fields if entry[key] %}<dt>{{ label }}</dt><dd>{{ entry[key] }}</dd>{% endfor %}</dl>
+{% else %}<p class="empty">Бұл күнге жазба әлі қосылған жоқ.</p>{% endif %}
+</article>
+<article class="card"><h2>Бала келмейтін күн</h2>
+{% if notice %}<p class="notice">Хабарлама жіберілді · {{ notice.reason }}</p>{% else %}<p>Бұл күнге хабарлама жоқ.</p>{% endif %}
+{% if user.role == 'parent' and day >= today %}
+<form class="stack" method="post" action="/kundelik/{{ child.id }}"><input type="hidden" name="day" value="{{ day }}">
+<label>Тәрбиешіге хабарлама<textarea name="reason" maxlength="250" rows="3" placeholder="Мысалы, отбасылық жағдайға байланысты" required>{{ notice.reason if notice else '' }}</textarea></label>
+<button class="button">{{ 'Өзгерісті сақтау' if notice else 'Хабарлама жіберу' }}</button></form>
+{% if notice %}<form class="stack" method="post" action="/kundelik/{{ child.id }}"><input type="hidden" name="day" value="{{ day }}"><button class="button outline" name="action" value="cancel">Хабарламаны қайтарып алу</button></form>{% endif %}
+{% endif %}</article></div></section>
+
+{% endif %}
+</main>
+<footer><div class="wrap foot"><a class="brand" href="/"><span class="mark" aria-hidden="true">Б</span> Балапан</a><span>Балабақшаны басқарудың оқу жобасы</span><a href="/keste">Күн тәртібі</a></div></footer>
+</body></html>

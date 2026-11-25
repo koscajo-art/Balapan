@@ -1,0 +1,12 @@
+<form action="/habarlandyru{% if item %}/{{ item.id }}{% endif %}" method="post" enctype="multipart/form-data" class="stack">
+<label>Тақырып<input name="title" value="{{ item.title if item else '' }}" maxlength="100" required></label>
+<label>Қысқаша мәтін<textarea name="body" maxlength="1000" rows="2" required>{{ item.body if item else '' }}</textarea></label>
+<label>Іс-шара туралы толық ақпарат<textarea name="details" maxlength="5000" rows="4">{{ (item.details or '') if item else '' }}</textarea></label>
+<div class="lesson-fields">
+<label>Іс-шара күні<input name="event_day" type="date" value="{{ (item.event_day or '') if item else '' }}"></label>
+<label>Өтетін орны<input name="location" maxlength="140" value="{{ (item.location or '') if item else '' }}"></label>
+</div>
+<label>{{ 'Фотосуретті ауыстыру' if item and item.photo else 'Фотосурет' }}<small>JPG немесе PNG · 5 МБ дейін</small><input type="file" name="photo" accept="image/jpeg,image/png"></label>
+<label>{{ 'Бейнені ауыстыру' if item and item.video else 'Бейне' }}<small>MP4 немесе WebM · 25 МБ дейін</small><input type="file" name="video" accept="video/mp4,video/webm"></label>
+<button class="button">{{ 'Сақтау' if item else 'Жариялау' }}</button>
+</form>

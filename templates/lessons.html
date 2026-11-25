@@ -1,0 +1,37 @@
+{% macro lesson_form(lesson=none) %}
+<form class="stack" method="post" action="/sabak-kestesi">
+<input type="hidden" name="lesson_id" value="{{ lesson.id if lesson else 0 }}">
+<div class="lesson-fields">
+<label>Топ<select name="group" required>{% for g in groups %}<option value="{{ g.id }}" {% if lesson and g.id == lesson.group_id %}selected{% endif %}>{{ g.name }} · {{ g.teacher }}</option>{% endfor %}</select></label>
+<label>Апта күні<select name="weekday" required>{% for name in weekdays %}<option value="{{ loop.index0 }}" {% if lesson and lesson.weekday == loop.index0 %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
+<label>Басталуы<input type="time" name="starts" value="{{ lesson.starts if lesson else '' }}" required></label>
+<label>Аяқталуы<input type="time" name="ends" value="{{ lesson.ends if lesson else '' }}" required></label>
+</div>
+<label>Сабақ атауы<input name="title" value="{{ lesson.title if lesson else '' }}" maxlength="100" required></label>
+<label>Тәрбиешінің міндеті<textarea name="task" maxlength="500" rows="2" required>{{ lesson.task if lesson else '' }}</textarea></label>
+<button class="button">Сақтау</button>
+</form>
+{% endmacro %}
+<section class="wrap interior">
+<a class="back" href="/kabinet">Жеке кабинет</a>
+<h1>Апталық сабақ кестесі</h1>
+<p>{{ 'Топтар, сабақ уақыты және тәрбиешілердің міндеттері' if user.role == 'admin' else 'Өзіңізге бекітілген топтардың сабақтары мен міндеттері' }}</p>
+{% set feedback = {'saved':'Сабақ сақталды.', 'deleted':'Сабақ өшірілді.', 'invalid':'Сабақ деректерін және уақыт аралығын тексеріңіз.', 'conflict':'Тәрбиешінің осы уақытта басқа сабағы бар.'} %}
+{% if msg in feedback %}<p class="notice {{ 'bad' if msg in ('invalid','conflict') }}" role="status">{{ feedback[msg] }}</p>{% endif %}
+{% if user.role == 'admin' %}
+<details class="card lesson-day" {% if msg in ('invalid','conflict') %}open{% endif %}><summary>Жаңа сабақ қосу</summary>{{ lesson_form() }}</details>
+{% endif %}
+{% for name in weekdays %}
+{% set entries = lessons | selectattr('weekday','equalto',loop.index0) | list %}
+{% if entries or loop.index0 < 5 %}
+<article class="card lesson-day"><h2>{{ name }}</h2>
+{% for lesson in entries %}
+{% if user.role == 'admin' %}<details><summary>{{ lesson.starts }}–{{ lesson.ends }} · {{ lesson.group_name }} · {{ lesson.title }}</summary>
+<p>{{ lesson.teacher }}</p><p>{{ lesson.task }}</p>{{ lesson_form(lesson) }}
+<form class="stack" method="post" action="/sabak-kestesi/{{ lesson.id }}/oshiru"><button class="button outline">Сабақты өшіру</button></form></details>
+{% else %}<div class="lesson-entry"><time>{{ lesson.starts }}–{{ lesson.ends }}</time><div><strong>{{ lesson.group_name }} · {{ lesson.title }}</strong><p>{{ lesson.task }}</p></div></div>{% endif %}
+{% else %}<p class="empty">Сабақ жоспарланбаған.</p>{% endfor %}
+</article>
+{% endif %}
+{% endfor %}
+</section>
